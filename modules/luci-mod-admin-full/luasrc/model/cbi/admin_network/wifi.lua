@@ -734,25 +734,28 @@ if hwtype == "mac80211" or hwtype == "prism2" then
 	pmk_r1_push.placeholder = "0"
 	pmk_r1_push.rmempty = true
 
-	r0kh = s:taboption("encryption", DynamicList, "r0kh", translate("External R0 Key Holder List"),
-		translate("List of R0KHs in the same Mobility Domain. " ..
-			"<br />Format: MAC-address,NAS-Identifier,128-bit key as hex string. " ..
-			"<br />This list is used to map R0KH-ID (NAS Identifier) to a destination " ..
-			"MAC address when requesting PMK-R1 key from the R0KH that the STA " ..
-			"used during the Initial Mobility Domain Association."))
+	r0kh = s:taboption("encryption", DynamicList, "r0kh", translate("External R0 Key Holder List"))
 	r0kh:depends({ieee80211r="1"})
 	r0kh.rmempty = true
 
-	r1kh = s:taboption("encryption", DynamicList, "r1kh", translate("External R1 Key Holder List"),
-		translate ("List of R1KHs in the same Mobility Domain. "..
-			"<br />Format: MAC-address,R1KH-ID as 6 octets with colons,128-bit key as hex string. "..
-			"<br />This list is used to map R1KH-ID to a destination MAC address " ..
-			"when sending PMK-R1 key from the R0KH. This is also the " ..
-			"list of authorized R1KHs in the MD that can request PMK-R1 keys."))
+	r1kh = s:taboption("encryption", DynamicList, "r1kh", translate("External R1 Key Holder List"))
 	r1kh:depends({ieee80211r="1"})
 	r1kh.rmempty = true
 	-- End of 802.11r options
-
+	
+	--For 802.11i support
+	ieee80211i = s:taboption("encryption", Flag, "rsn_preauth", "Fast Roaming OKC")
+	--ieee80211i:depends({rsn_preauth="1", ieee80211r=""})
+	ieee80211i.rmempty = false
+	ieee80211i:depends({encryption="wpa2"})
+	ieee80211i:depends({encryption="psk2"})
+	ieee80211i:depends({encryption="wpa-mixed"})
+	ieee80211i:depends({encryption="psk-mixed"})
+	if ({encryption}) == "none" then
+		ieee80211i:value("0")
+	end
+	--End 802.11i
+	
 	eaptype = s:taboption("encryption", ListValue, "eap_type", translate("EAP-Method"))
 	eaptype:value("tls",  "TLS")
 	eaptype:value("ttls", "TTLS")
