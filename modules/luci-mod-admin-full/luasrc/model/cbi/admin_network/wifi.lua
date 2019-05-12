@@ -713,7 +713,7 @@ if hwtype == "mac80211" or hwtype == "prism2" then
 	ft_psk_generate_local:depends({ieee80211r="1"})
 	ft_psk_generate_local.default = ft_psk_generate_local.enabled
 	ft_psk_generate_local.rmempty = false
-
+--[[
 	r0_key_lifetime = s:taboption("encryption", Value, "r0_key_lifetime",
 			translate("R0 Key Lifetime"), translate("minutes"))
 	r0_key_lifetime:depends({ieee80211r="1"})
@@ -728,7 +728,7 @@ if hwtype == "mac80211" or hwtype == "prism2" then
 	r1_key_holder.placeholder = "00004f577274"
 	r1_key_holder.datatype = "and(hexstring,rangelength(12,12))"
 	r1_key_holder.rmempty = true
-
+]]--
 	pmk_r1_push = s:taboption("encryption", Flag, "pmk_r1_push", translate("PMK R1 Push"))
 	pmk_r1_push:depends({ieee80211r="1"})
 	pmk_r1_push.placeholder = "0"
