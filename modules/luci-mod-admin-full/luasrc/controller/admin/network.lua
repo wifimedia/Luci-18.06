@@ -109,6 +109,7 @@ function index()
 				end)
 		end
 
+--[[
 
 		if nixio.fs.access("/etc/config/dhcp") then
 			page = node("admin", "network", "dhcp")
@@ -129,6 +130,7 @@ function index()
 		page.target = cbi("admin_network/routes")
 		page.title  = _("Static Routes")
 		page.order  = 50
+]]--
 
 		page = node("admin", "network", "diagnostics")
 		page.target = template("admin_network/diagnostics")
@@ -186,7 +188,7 @@ function wifi_add()
 	if dev then
 		local net = dev:add_wifinet({
 			mode       = "ap",
-			ssid       = "OpenWrt",
+			ssid       = "OPENWIFI",
 			encryption = "none"
 		})
 
