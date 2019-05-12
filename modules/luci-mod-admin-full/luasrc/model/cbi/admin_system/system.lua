@@ -55,7 +55,7 @@ function o.write(self, section, value)
 	end
 
 	AbstractValue.write(self, section, value)
-	local timezone = lookup_zone(value) or "GMT0"
+	local timezone = lookup_zone(value) or "ICT-7"
 	self.map.uci:set("system", section, "timezone", timezone)
 	fs.writefile("/etc/TZ", timezone .. "\n")
 end
@@ -108,6 +108,7 @@ o:value(9, translate("Warning"))
 --
 -- Langauge & Style
 --
+--[[
 
 o = s:taboption("language", ListValue, "_lang", translate("Language"))
 o:value("auto")
@@ -143,8 +144,30 @@ end
 function o.write(self, section, value)
 	m.uci:set("luci", "main", "mediaurlbase", value)
 end
+]]--
+---Watchdog Timer
+---
+s1 = m:section(TypedSection, "watchcat", translate("Watchdog Timer"))
+s1.anonymous = true
+s1.addremove = false
+s1:tab("watchdog",  translate("Watchdog Timer"))
+wcht = s1:taboption( "watchdog",ListValue, "period", "Period","Default  30s")
+wcht.default = "30"
+local period = 1
+while (period < 121) do
+	wcht :value(period , period .. " ")
+	period = period + 1
+end
 
 
+fdl = s1:taboption("watchdog", ListValue, "forcedelay", "Forcedelay","Default  30s")
+fdl.default = "10"
+local forcedelay = 1
+while (forcedelay < 61) do
+	fdl:value(forcedelay, forcedelay .. " ")
+	forcedelay = forcedelay + 1
+end
+hname = s1:taboption("watchdog", Value, "pinghosts", "Hostname")
 --
 -- NTP
 --
@@ -155,7 +178,7 @@ if has_ntpd then
 	if m:formvalue("cbid.system._timeserver._enable") then
 		m.uci:section("system", "timeserver", "ntp",
 			{
-                	server = { "0.openwrt.pool.ntp.org", "1.openwrt.pool.ntp.org", "2.openwrt.pool.ntp.org", "3.openwrt.pool.ntp.org" }
+                	server = { "0.asia.pool.ntp.org", "1.asia.pool.ntp.org", "2.asia.pool.ntp.org", "3.asia.pool.ntp.org" }
 			}
 		)
 
@@ -206,6 +229,7 @@ if has_ntpd then
 			end
 		end
 
+--[[
 
 		o = s:option(Flag, "enable_server", translate("Provide NTP server"))
 		o:depends("enable", "1")
@@ -217,6 +241,7 @@ if has_ntpd then
 
 		-- retain server list even if disabled
 		function o.remove() end
+]]--
 
 	end
 end
