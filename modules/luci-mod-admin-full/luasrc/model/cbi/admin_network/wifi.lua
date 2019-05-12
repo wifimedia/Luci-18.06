@@ -20,11 +20,7 @@ local acct_port, acct_secret, acct_server, anonymous_identity, ant1, ant2,
 
 arg[1] = arg[1] or ""
 
-m = Map("wireless", "",
-	translate("The <em>Device Configuration</em> section covers physical settings of the radio " ..
-		"hardware such as channel, transmit power or antenna selection which are shared among all " ..
-		"defined wireless networks (if the radio hardware is multi-SSID capable). Per network settings " ..
-		"like encryption or operation mode are grouped in the <em>Interface Configuration</em>."))
+m = Map("wireless", "")
 
 m:chain("network")
 m:chain("firewall")
@@ -260,93 +256,6 @@ if hwtype == "mac80211" then
 	beacon_int.datatype = "range(15,65535)"
 end
 
-
-------------------- Broadcom Device ------------------
-
-if hwtype == "broadcom" then
-	tp = s:taboption("general",
-		(#tx_power_list > 0) and ListValue or Value,
-		"txpower", translate("Transmit Power"), "dBm")
-
-	tp.rmempty = true
-	tp.default = tx_power_cur
-
-	function tp.cfgvalue(...)
-		return txpower_current(Value.cfgvalue(...), tx_power_list)
-	end
-
-	tp:value("", translate("auto"))
-	for _, p in ipairs(tx_power_list) do
-		tp:value(p.driver_dbm, "%i dBm (%i mW)"
-			%{ p.display_dbm, p.display_mw })
-	end
-
-	mode = s:taboption("advanced", ListValue, "hwmode", translate("Band"))
-	if hw_modes.b then
-		mode:value("11b", "2.4GHz (802.11b)")
-		if hw_modes.g then
-			mode:value("11bg", "2.4GHz (802.11b+g)")
-		end
-	end
-	if hw_modes.g then
-		mode:value("11g", "2.4GHz (802.11g)")
-		mode:value("11gst", "2.4GHz (802.11g + Turbo)")
-		mode:value("11lrs", "2.4GHz (802.11g Limited Rate Support)")
-	end
-	if hw_modes.a then mode:value("11a", "5GHz (802.11a)") end
-	if hw_modes.n then
-		if hw_modes.g then
-			mode:value("11ng", "2.4GHz (802.11g+n)")
-			mode:value("11n", "2.4GHz (802.11n)")
-		end
-		if hw_modes.a then
-			mode:value("11na", "5GHz (802.11a+n)")
-			mode:value("11n", "5GHz (802.11n)")
-		end
-		htmode = s:taboption("advanced", ListValue, "htmode", translate("HT mode (802.11n)"))
-		htmode:depends("hwmode", "11ng")
-		htmode:depends("hwmode", "11na")
-		htmode:depends("hwmode", "11n")
-		htmode:value("HT20", "20MHz")
-		htmode:value("HT40", "40MHz")
-	end
-
-	ant1 = s:taboption("advanced", ListValue, "txantenna", translate("Transmitter Antenna"))
-	ant1.widget = "radio"
-	ant1:depends("diversity", "")
-	ant1:value("3", translate("auto"))
-	ant1:value("0", translate("Antenna 1"))
-	ant1:value("1", translate("Antenna 2"))
-
-	ant2 = s:taboption("advanced", ListValue, "rxantenna", translate("Receiver Antenna"))
-	ant2.widget = "radio"
-	ant2:depends("diversity", "")
-	ant2:value("3", translate("auto"))
-	ant2:value("0", translate("Antenna 1"))
-	ant2:value("1", translate("Antenna 2"))
-
-	s:taboption("advanced", Flag, "frameburst", translate("Frame Bursting"))
-
-	s:taboption("advanced", Value, "distance", translate("Distance Optimization"))
-	--s:option(Value, "slottime", translate("Slot time"))
-
-	s:taboption("advanced", Value, "country", translate("Country Code"))
-	s:taboption("advanced", Value, "maxassoc", translate("Connection Limit"))
-end
-
-
---------------------- HostAP Device ---------------------
-
-if hwtype == "prism2" then
-	s:taboption("advanced", Value, "txpower", translate("Transmit Power"), "att units").rmempty = true
-
-	s:taboption("advanced", Flag, "diversity", translate("Diversity")).rmempty = false
-
-	s:taboption("advanced", Value, "txantenna", translate("Transmitter Antenna"))
-	s:taboption("advanced", Value, "rxantenna", translate("Receiver Antenna"))
-end
-
-
 ----------------------- Interface -----------------------
 
 s = m:section(NamedSection, wnet.sid, "wifi-iface", translate("Interface Configuration"))
@@ -432,7 +341,7 @@ end
 
 if hwtype == "mac80211" then
 	if fs.access("/usr/sbin/iw") then
-		mode:value("mesh", "802.11s")
+		mode:value("mesh", "Mesh")
 	end
 
 	mode:value("ahdemo", translate("Pseudo Ad-Hoc (ahdemo)"))
@@ -513,58 +422,6 @@ if hwtype == "mac80211" then
 	disassoc_low_ack.default = disassoc_low_ack.enabled
 end
 
-
--------------------- Broadcom Interface ----------------------
-
-if hwtype == "broadcom" then
-	mode:value("wds", translate("WDS"))
-	mode:value("monitor", translate("Monitor"))
-
-	hidden = s:taboption("general", Flag, "hidden", translate("Hide <abbr title=\"Extended Service Set Identifier\">ESSID</abbr>"))
-	hidden:depends({mode="ap"})
-	hidden:depends({mode="adhoc"})
-	hidden:depends({mode="wds"})
-
-	isolate = s:taboption("advanced", Flag, "isolate", translate("Separate Clients"),
-	 translate("Prevents client-to-client communication"))
-	isolate:depends({mode="ap"})
-
-	s:taboption("advanced", Flag, "doth", "802.11h")
-	s:taboption("advanced", Flag, "wmm", translate("WMM Mode"))
-
-	bssid:depends({mode="wds"})
-	bssid:depends({mode="adhoc"})
-end
-
-
------------------------ HostAP Interface ---------------------
-
-if hwtype == "prism2" then
-	mode:value("wds", translate("WDS"))
-	mode:value("monitor", translate("Monitor"))
-
-	hidden = s:taboption("general", Flag, "hidden", translate("Hide <abbr title=\"Extended Service Set Identifier\">ESSID</abbr>"))
-	hidden:depends({mode="ap"})
-	hidden:depends({mode="adhoc"})
-	hidden:depends({mode="wds"})
-
-	bssid:depends({mode="sta"})
-
-	mp = s:taboption("macfilter", ListValue, "macpolicy", translate("MAC-Address Filter"))
-	mp:value("", translate("disable"))
-	mp:value("allow", translate("Allow listed only"))
-	mp:value("deny", translate("Allow all except listed"))
-	ml = s:taboption("macfilter", DynamicList, "maclist", translate("MAC-List"))
-	ml:depends({macpolicy="allow"})
-	ml:depends({macpolicy="deny"})
-	nt.mac_hints(function(mac, name) ml:value(mac, "%s (%s)" %{ mac, name }) end)
-
-	s:taboption("advanced", Value, "rate", translate("Transmission Rate"))
-	s:taboption("advanced", Value, "frag", translate("Fragmentation Threshold"))
-	s:taboption("advanced", Value, "rts", translate("RTS/CTS Threshold"))
-end
-
-
 ------------------- WiFI-Encryption -------------------
 
 encr = s:taboption("encryption", ListValue, "encryption", translate("Encryption"))
@@ -631,8 +488,8 @@ end
 
 
 encr:value("none", "No Encryption")
-encr:value("wep-open",   translate("WEP Open System"), {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
-encr:value("wep-shared", translate("WEP Shared Key"),  {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
+--encr:value("wep-open",   translate("WEP Open System"), {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
+--encr:value("wep-shared", translate("WEP Shared Key"),  {mode="ap"}, {mode="sta"}, {mode="ap-wds"}, {mode="sta-wds"}, {mode="adhoc"}, {mode="ahdemo"}, {mode="wds"})
 
 if hwtype == "mac80211" or hwtype == "prism2" then
 	local supplicant = fs.access("/usr/sbin/wpa_supplicant")
