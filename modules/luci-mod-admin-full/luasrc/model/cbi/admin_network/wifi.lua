@@ -684,7 +684,7 @@ if hwtype == "mac80211" or hwtype == "prism2" then
 	nasid:depends({mode="ap-wds", encryption="wpa2"})
 	nasid:depends({ieee80211r="1"})
 	nasid.rmempty = true
-
+--[[
 	mobility_domain = s:taboption("encryption", Value, "mobility_domain",
 			translate("Mobility Domain"),
 			translate("4-character hexadecimal ID"))
@@ -700,7 +700,7 @@ if hwtype == "mac80211" or hwtype == "prism2" then
 	reassociation_deadline.placeholder = "1000"
 	reassociation_deadline.datatype = "range(1000,65535)"
 	reassociation_deadline.rmempty = true
-
+]]--
 	ft_protocol = s:taboption("encryption", ListValue, "ft_over_ds", translate("FT protocol"))
 	ft_protocol:depends({ieee80211r="1"})
 	ft_protocol:value("1", translatef("FT over DS"))
